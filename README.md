@@ -1,8 +1,49 @@
 # Daily Brief
 
-A personal news app. Twice a day it pulls headlines from about 35 RSS feeds (BBC, The Guardian, Al Jazeera, The National, Gulf News, NPR, CNBC, Politico, The Verge, Simple Flying, FlightGlobal, STAT, Space.com and others). It stores the articles and images in Supabase and sends push notifications to your phone when something major happens.
+**Stay on top of world news without social media.**
 
-**Sections:** Breaking & Major Incidents · World · Middle East & Gulf · Politics · Business & Economy · Aviation & Travel · Technology · AI · Science & Space · Health
+If you're not on social media, you hear about big events (a bombing, a plane incident, a war escalating) days later, from a friend. Daily Brief fixes that. Twice a day it reads about 35 trusted news feeds, works out which stories really matter, and pushes them to your phone.
+
+## Features
+
+- 📰 **One clean feed** from BBC, The Guardian, Al Jazeera, The National, Gulf News, NPR, CNBC, Politico, The Verge, Ars Technica, Simple Flying, FlightGlobal, STAT, Space.com and more
+- 🚨 **Breaking-news detection.** Attacks, crashes, disasters, and stories that several outlets are covering at once are flagged automatically.
+- 🔔 **Push notifications** to iPhone and Android with no app store involved. You get an alert for each major incident plus a short brief at 8 AM and 8 PM (PKT).
+- 🗂️ **10 sections:** Breaking & Major Incidents · World · Middle East & Gulf · Politics · Business & Economy · Aviation & Travel · Technology · AI · Science & Space · Health
+- 🖼️ **Articles and images are stored** in your own database, so the feed loads fast and doesn't depend on publishers' image links.
+- 📱 **Installable** as a home-screen app (PWA), with light and dark mode.
+- 💸 **Runs free** on the Vercel Hobby and Supabase Free plans.
+
+## Tech stack
+
+| Layer | Tech |
+| --- | --- |
+| App | [Next.js 16](https://nextjs.org) (App Router, Cache Components), React 19, Tailwind CSS 4 |
+| Hosting & scheduling | [Vercel](https://vercel.com) + Vercel Cron |
+| Database & image storage | [Supabase](https://supabase.com) (Postgres + Storage) |
+| Notifications | Web Push (VAPID) via [`web-push`](https://github.com/web-push-libs/web-push) and a service worker |
+| News sources | Public RSS feeds via [`rss-parser`](https://github.com/rbren/rss-parser) |
+
+## Project structure
+
+```
+src/
+  app/
+    page.tsx                    home: lead story, breaking strip, one row per section
+    category/[slug]/page.tsx    full section pages
+    settings/page.tsx           notification settings ("Alerts")
+    api/cron/fetch-news/        the twice-daily ingest job
+    api/push/                   subscribe / preferences / test notification
+  components/                   article cards, nav, notification settings UI
+  lib/
+    categories.ts               sections + RSS feed list
+    ingest/                     feed parsing, breaking-news scoring, image mirroring, run orchestration
+    push.ts                     web push sending
+    articles.ts                 cached database queries for the pages
+public/sw.js                    service worker (shows notifications, opens stories)
+supabase/schema.sql             tables + storage bucket
+vercel.json                     cron schedule
+```
 
 ## How it works
 
