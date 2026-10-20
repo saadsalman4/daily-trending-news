@@ -14,7 +14,7 @@ export default function SettingsPage() {
       <section className="text-sm text-muted">
         <h2 className="mb-1 font-semibold text-ink">How it works</h2>
         <p>
-          News is collected from BBC, The Guardian, Al Jazeera, The National, Gulf News, NPR, CNBC, Politico, The Verge, Simple Flying and others
+          News is collected from BBC, The Guardian, Al Jazeera, Dawn, Geo News, The National, Gulf News, NPR, CNBC, Politico, The Verge, TMZ and others
           twice a day. Stories with severe keywords or covered by several outlets at once are flagged as breaking, and those trigger an alert.
         </p>
       </section>

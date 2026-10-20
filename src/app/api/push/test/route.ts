@@ -1,6 +1,6 @@
 import { isPushConfigured, sendPush } from "@/lib/push";
 import { getSupabase } from "@/lib/supabase";
-import type { PushSubscriptionRow } from "@/lib/types";
+import { SUBSCRIPTION_COLUMNS, type PushSubscriptionRow } from "@/lib/types";
 
 /** Sends a test notification to the calling browser's own subscription only. */
 export async function POST(request: Request) {
@@ -14,12 +14,12 @@ export async function POST(request: Request) {
 
   const { data } = await getSupabase()
     .from("push_subscriptions")
-    .select("endpoint, p256dh, auth, notify_breaking, notify_digest")
+    .select(SUBSCRIPTION_COLUMNS)
     .eq("endpoint", endpoint)
     .maybeSingle();
   if (!data) return Response.json({ error: "subscription not found" }, { status: 404 });
 
-  const res = await sendPush([data as PushSubscriptionRow], {
+  const res = await sendPush([data as unknown as PushSubscriptionRow], {
     title: "✅ Notifications are working",
     body: "You'll get breaking news alerts and a brief twice a day.",
     url: "/",

@@ -1,12 +1,11 @@
 import { isAllowedEndpoint } from "@/lib/push";
 import { getSupabase } from "@/lib/supabase";
+import { PREF_KEYS, type PrefKey } from "@/lib/types";
 
 type Body = {
   subscription?: { endpoint?: unknown; keys?: { p256dh?: unknown; auth?: unknown } };
   endpoint?: unknown;
-  notify_breaking?: unknown;
-  notify_digest?: unknown;
-};
+} & Partial<Record<PrefKey, unknown>>;
 
 function str(v: unknown, max = 600): v is string {
   return typeof v === "string" && v.length > 0 && v.length <= max;
@@ -21,10 +20,7 @@ async function readBody(request: Request): Promise<Body | null> {
 }
 
 function prefs(body: Body) {
-  return {
-    ...(typeof body.notify_breaking === "boolean" ? { notify_breaking: body.notify_breaking } : {}),
-    ...(typeof body.notify_digest === "boolean" ? { notify_digest: body.notify_digest } : {}),
-  };
+  return Object.fromEntries(PREF_KEYS.filter((k) => typeof body[k] === "boolean").map((k) => [k, body[k]]));
 }
 
 /** Save (or refresh) a browser's push subscription. */
@@ -60,11 +56,11 @@ export async function PUT(request: Request) {
   if (!body || !str(body.endpoint, 1000)) return Response.json({ error: "endpoint required" }, { status: 400 });
   const { data, error } = await getSupabase()
     .from("push_subscriptions")
-    .select("notify_breaking, notify_digest")
+    .select(PREF_KEYS.join(", "))
     .eq("endpoint", body.endpoint)
     .maybeSingle();
   if (error) return Response.json({ error: error.message }, { status: 500 });
-  return Response.json({ subscribed: Boolean(data), ...data });
+  return Response.json({ subscribed: Boolean(data), ...(data as object | null) });
 }
 
 /** Update preferences for an existing subscription. */

@@ -2,14 +2,14 @@
 
 **Stay on top of world news without social media.**
 
-If you're not on social media, you hear about big events (a bombing, a plane incident, a war escalating) days later, from a friend. Daily Brief fixes that. Twice a day it reads about 35 trusted news feeds, works out which stories really matter, and pushes them to your phone.
+If you're not on social media, you hear about big events (a bombing, a plane incident, a war escalating) days later, from a friend. Daily Brief fixes that. Twice a day it reads about 45 trusted news feeds, works out which stories really matter, and pushes them to your phone.
 
 ## Features
 
-- 📰 **One clean feed** from BBC, The Guardian, Al Jazeera, The National, Gulf News, NPR, CNBC, Politico, The Verge, Ars Technica, Simple Flying, FlightGlobal, STAT, Space.com and more
+- 📰 **One clean feed** from BBC, The Guardian, Al Jazeera, Dawn, Geo News, Express Tribune, The National, Gulf News, NPR, CNBC, Politico, The Verge, Ars Technica, Simple Flying, FlightGlobal, STAT, Space.com, TMZ, E! News, Variety and more
 - 🚨 **Breaking-news detection.** Attacks, crashes, disasters, and stories that several outlets are covering at once are flagged automatically.
-- 🔔 **Push notifications** to iPhone and Android with no app store involved. You get an alert for each major incident plus a short brief at 8 AM and 8 PM (PKT).
-- 🗂️ **10 sections:** Breaking & Major Incidents · World · Middle East & Gulf · Politics · Business & Economy · Aviation & Travel · Technology · AI · Science & Space · Health
+- 🔔 **Push notifications** to iPhone and Android with no app store involved. You get an alert for each major incident plus a short brief at 8 AM and 8 PM (PKT). Pakistan and Celebrity briefs are optional extras you can switch on separately.
+- 🗂️ **12 sections:** Breaking & Major Incidents · World · Middle East & Gulf · Pakistan · Politics · Business & Economy · Aviation & Travel · Technology · AI · Science & Space · Health · Celebrity & Entertainment
 - 🖼️ **Articles and images are stored** in your own database, so the feed loads fast and doesn't depend on publishers' image links.
 - 📱 **Installable** as a home-screen app (PWA), with light and dark mode.
 - 💸 **Runs free** on the Vercel Hobby and Supabase Free plans.

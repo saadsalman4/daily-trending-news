@@ -4,7 +4,7 @@ import { ARTICLES_TAG } from "../articles";
 import { getCategory } from "../categories";
 import { isPushConfigured, sendPush } from "../push";
 import { getSupabase, publicImageUrl } from "../supabase";
-import type { ArticleRow, PushSubscriptionRow } from "../types";
+import { SUBSCRIPTION_COLUMNS, type ArticleRow, type PrefKey, type PushSubscriptionRow } from "../types";
 import { fetchAllFeeds } from "./feeds";
 import { deleteImages, processImages } from "./images";
 import { SAME_STORY, scoreArticles, similarity, titleTokens } from "./scoring";
@@ -12,6 +12,12 @@ import { truncate } from "./util";
 
 const RETENTION_DAYS = Number(process.env.RETENTION_DAYS || 14);
 const MAX_BREAKING_PUSHES = 4;
+
+/** Sections with their own opt-in brief. They're left out of the main digest. */
+const OPT_IN_SECTIONS: Record<string, { pref: PrefKey; emoji: string }> = {
+  pakistan: { pref: "notify_pakistan", emoji: "🇵🇰" },
+  entertainment: { pref: "notify_entertainment", emoji: "🎬" },
+};
 const HOUR = 60 * 60 * 1000;
 
 export type IngestResult = {
@@ -128,13 +134,12 @@ export async function runIngest({ budgetMs = 240_000, notify = true } = {}): Pro
 
 async function sendNotifications(newCount: number): Promise<number> {
   const supabase = getSupabase();
-  const { data: subs, error: subsError } = await supabase
-    .from("push_subscriptions")
-    .select("endpoint, p256dh, auth, notify_breaking, notify_digest");
+  const { data, error: subsError } = await supabase.from("push_subscriptions").select(SUBSCRIPTION_COLUMNS);
   if (subsError) throw subsError;
+  const subs = data as unknown as PushSubscriptionRow[];
   if (!subs.length) return 0;
-  const breakingSubs = (subs as PushSubscriptionRow[]).filter((s) => s.notify_breaking);
-  const digestSubs = (subs as PushSubscriptionRow[]).filter((s) => s.notify_digest);
+  const breakingSubs = subs.filter((s) => s.notify_breaking);
+  const digestSubs = subs.filter((s) => s.notify_digest);
   let sent = 0;
 
   // Breaking: one push per distinct story, skipping anything we already alerted on.
@@ -181,31 +186,51 @@ async function sendNotifications(newCount: number): Promise<number> {
     await supabase.from("articles").update({ notified_at: new Date().toISOString() }).in("id", pendingIds);
   }
 
-  // Digest: one summary push per run with the top headlines from different sections.
-  if (newCount > 0 && digestSubs.length) {
-    const { data: top } = await supabase
-      .from("articles")
-      .select("title, category, score")
-      .gte("fetched_at", new Date(Date.now() - HOUR).toISOString())
-      .order("score", { ascending: false })
-      .limit(40);
-    const picked: string[] = [];
+  if (newCount === 0) return sent;
+
+  // Everything inserted by this run, best first (score, then newest).
+  const { data: fresh } = await supabase
+    .from("articles")
+    .select("title, category, score")
+    .gte("fetched_at", new Date(Date.now() - HOUR).toISOString())
+    .order("score", { ascending: false })
+    .order("published_at", { ascending: false })
+    .limit(500);
+  const freshRows = fresh ?? [];
+  const bullets = (rows: { title: string }[]) => rows.slice(0, 3).map((a) => `• ${truncate(a.title, 90)}`).join("\n");
+
+  // Digest: one summary push per run with top headlines from different hard-news sections.
+  if (digestSubs.length) {
+    const picked: { title: string }[] = [];
     const usedCats = new Set<string>();
-    for (const a of top ?? []) {
-      if (usedCats.has(a.category)) continue;
+    for (const a of freshRows) {
+      if (a.category in OPT_IN_SECTIONS || usedCats.has(a.category)) continue;
       usedCats.add(a.category);
-      picked.push(`• ${truncate(a.title, 90)}`);
-      if (picked.length === 3) break;
+      picked.push(a);
     }
     if (picked.length) {
       const res = await sendPush(digestSubs, {
         title: `📰 Your news brief · ${newCount} new ${newCount === 1 ? "story" : "stories"}`,
-        body: picked.join("\n"),
+        body: bullets(picked),
         url: "/",
         tag: "digest",
       });
       sent += res.sent;
     }
+  }
+
+  // Opt-in sections: one brief per run for each section the device turned on.
+  for (const [category, { pref, emoji }] of Object.entries(OPT_IN_SECTIONS)) {
+    const sectionSubs = subs.filter((s) => s[pref]);
+    const rows = freshRows.filter((a) => a.category === category);
+    if (!sectionSubs.length || !rows.length) continue;
+    const res = await sendPush(sectionSubs, {
+      title: `${emoji} ${getCategory(category)?.name} · ${rows.length} new ${rows.length === 1 ? "story" : "stories"}`,
+      body: bullets(rows),
+      url: `/category/${category}`,
+      tag: `section-${category}`,
+    });
+    sent += res.sent;
   }
 
   return sent;

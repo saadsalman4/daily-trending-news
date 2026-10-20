@@ -2,13 +2,15 @@ export type CategorySlug =
   | "breaking"
   | "world"
   | "middle-east"
+  | "pakistan"
   | "politics"
   | "business"
   | "aviation"
   | "technology"
   | "ai"
   | "science"
-  | "health";
+  | "health"
+  | "entertainment";
 
 export type Category = {
   slug: CategorySlug;
@@ -27,6 +29,7 @@ export const CATEGORIES: Category[] = [
   { slug: "breaking", name: "Breaking & Major Incidents", short: "Breaking", description: "Attacks, crashes, disasters and the stories everyone is covering.", weight: 0 },
   { slug: "world", name: "World", short: "World", description: "Conflicts, diplomacy and major global events.", weight: 1 },
   { slug: "middle-east", name: "Middle East & Gulf", short: "Middle East", description: "Saudi Arabia, UAE, Israel, Iran and the wider region.", weight: 2 },
+  { slug: "pakistan", name: "Pakistan", short: "Pakistan", description: "Politics, economy, security and everything else from home.", weight: 1 },
   { slug: "politics", name: "Politics", short: "Politics", description: "Elections, governments and policy.", weight: 0 },
   { slug: "business", name: "Business & Economy", short: "Business", description: "Markets, companies, inflation and oil.", weight: 0 },
   { slug: "aviation", name: "Aviation & Travel", short: "Aviation", description: "Airline incidents, airspace closures and travel advisories.", weight: 2 },
@@ -34,6 +37,9 @@ export const CATEGORIES: Category[] = [
   { slug: "ai", name: "AI", short: "AI", description: "Models, labs, policy and the AI industry.", weight: -2 },
   { slug: "science", name: "Science & Space", short: "Science", description: "Research, discoveries and space.", weight: -1 },
   { slug: "health", name: "Health", short: "Health", description: "Outbreaks, medical breakthroughs and public health.", weight: 0 },
+  // Celebrity deaths and scandals use the same words as hard news, so this section
+  // gets a big penalty to keep it out of Breaking.
+  { slug: "entertainment", name: "Celebrity & Entertainment", short: "Celebs", description: "Celebrity drama, Hollywood, Lollywood and showbiz.", weight: -5 },
 ];
 
 export const FEED_CATEGORIES = CATEGORIES.filter((c) => c.slug !== "breaking");
@@ -50,6 +56,22 @@ export const FEEDS: Feed[] = [
   { category: "middle-east", source: "Gulf News", url: "https://gulfnews.com/feed" },
   { category: "middle-east", source: "BBC News", url: "https://feeds.bbci.co.uk/news/world/middle_east/rss.xml" },
   { category: "middle-east", source: "The Guardian", url: "https://www.theguardian.com/world/middleeast/rss" },
+
+  // Pakistan
+  { category: "pakistan", source: "Dawn", url: "https://www.dawn.com/feeds/pakistan" },
+  { category: "pakistan", source: "Geo News", url: "https://www.geo.tv/rss/1/1" },
+  { category: "pakistan", source: "Express Tribune", url: "https://tribune.com.pk/feed/pakistan" },
+
+  // Celebrity & Entertainment
+  { category: "entertainment", source: "TMZ", url: "https://www.tmz.com/rss.xml" },
+  { category: "entertainment", source: "Page Six", url: "https://pagesix.com/feed/" },
+  { category: "entertainment", source: "E! News", url: "https://www.eonline.com/syndication/feeds/rssfeeds/topstories.xml" },
+  { category: "entertainment", source: "Us Weekly", url: "https://www.usmagazine.com/feed/" },
+  { category: "entertainment", source: "Daily Mail", url: "https://www.dailymail.co.uk/tvshowbiz/index.rss" },
+  { category: "entertainment", source: "Variety", url: "https://variety.com/feed/" },
+  { category: "entertainment", source: "The Guardian", url: "https://www.theguardian.com/lifeandstyle/celebrity/rss" },
+  { category: "entertainment", source: "BBC News", url: "https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml" },
+  { category: "entertainment", source: "Dawn Images", url: "https://images.dawn.com/feeds/home" },
 
   // Aviation & Travel
   { category: "aviation", source: "Simple Flying", url: "https://simpleflying.com/feed/" },

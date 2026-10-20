@@ -42,6 +42,10 @@ create table if not exists public.push_subscriptions (
   last_success_at timestamptz
 );
 
+-- Opt-in section briefs (added later; safe to re-run on an existing database).
+alter table public.push_subscriptions add column if not exists notify_pakistan boolean not null default false;
+alter table public.push_subscriptions add column if not exists notify_entertainment boolean not null default false;
+
 alter table public.push_subscriptions enable row level security;
 
 -- ─── Fetch run log ───────────────────────────────────────────────────────────

@@ -22,10 +22,21 @@ export type Article = Pick<
   "id" | "url" | "title" | "summary" | "source" | "category" | "published_at" | "is_breaking" | "score"
 > & { image: string | null };
 
-export type PushSubscriptionRow = {
+export const PREF_KEYS = ["notify_breaking", "notify_digest", "notify_pakistan", "notify_entertainment"] as const;
+export type PrefKey = (typeof PREF_KEYS)[number];
+export type Prefs = Record<PrefKey, boolean>;
+
+export const DEFAULT_PREFS: Prefs = {
+  notify_breaking: true,
+  notify_digest: true,
+  notify_pakistan: false,
+  notify_entertainment: false,
+};
+
+export type PushSubscriptionRow = Prefs & {
   endpoint: string;
   p256dh: string;
   auth: string;
-  notify_breaking: boolean;
-  notify_digest: boolean;
 };
+
+export const SUBSCRIPTION_COLUMNS = ["endpoint", "p256dh", "auth", ...PREF_KEYS].join(", ");

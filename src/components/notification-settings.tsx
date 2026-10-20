@@ -1,11 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DEFAULT_PREFS, PREF_KEYS, type PrefKey, type Prefs } from "@/lib/types";
 
 type Status = "loading" | "unsupported" | "ios-install" | "denied" | "off" | "on";
-type Prefs = { notify_breaking: boolean; notify_digest: boolean };
 
-const DEFAULT_PREFS: Prefs = { notify_breaking: true, notify_digest: true };
+const TOGGLES: { key: PrefKey; label: string; hint: string }[] = [
+  {
+    key: "notify_breaking",
+    label: "Breaking & major incidents",
+    hint: "Attacks, crashes, disasters and stories every outlet is covering. Up to 4 per run.",
+  },
+  { key: "notify_digest", label: "Twice-daily brief", hint: "A summary of the top headlines at about 8:00 and 20:00 (Pakistan time)." },
+  { key: "notify_pakistan", label: "🇵🇰 Pakistan", hint: "A brief of the top Pakistan stories, twice a day." },
+  { key: "notify_entertainment", label: "🎬 Celebrity & entertainment", hint: "The latest celebrity drama and showbiz, twice a day." },
+];
+
+function pickPrefs(saved: Record<string, unknown>): Prefs {
+  return Object.fromEntries(PREF_KEYS.map((k) => [k, typeof saved[k] === "boolean" ? saved[k] : DEFAULT_PREFS[k]])) as Prefs;
+}
 
 function urlBase64ToUint8Array(base64: string) {
   const padded = (base64 + "=".repeat((4 - (base64.length % 4)) % 4)).replace(/-/g, "+").replace(/_/g, "/");
@@ -63,7 +76,7 @@ export function NotificationSettings() {
           await api("POST", "/api/push/subscribe", { subscription: sub.toJSON(), ...DEFAULT_PREFS });
         }
         if (cancelled) return;
-        setPrefs(saved.subscribed ? { notify_breaking: saved.notify_breaking, notify_digest: saved.notify_digest } : DEFAULT_PREFS);
+        setPrefs(saved.subscribed ? pickPrefs(saved) : DEFAULT_PREFS);
         setSubscription(sub);
         setStatus("on");
       } catch (e) {
@@ -118,7 +131,7 @@ export function NotificationSettings() {
       setStatus("off");
     });
 
-  const togglePref = (key: keyof Prefs) =>
+  const togglePref = (key: PrefKey) =>
     run(async () => {
       if (!subscription) return;
       const next = { ...prefs, [key]: !prefs[key] };
@@ -176,20 +189,16 @@ export function NotificationSettings() {
             <p className="flex items-center gap-2 font-semibold">
               <span className="size-2 rounded-full bg-green-500" aria-hidden /> Notifications are on for this device
             </p>
-            <Toggle
-              label="Breaking & major incidents"
-              hint="Attacks, crashes, disasters and stories every outlet is covering. Up to 4 per run."
-              checked={prefs.notify_breaking}
-              disabled={busy}
-              onChange={() => togglePref("notify_breaking")}
-            />
-            <Toggle
-              label="Twice-daily brief"
-              hint="A summary of the top headlines at about 8:00 and 20:00 (Pakistan time)."
-              checked={prefs.notify_digest}
-              disabled={busy}
-              onChange={() => togglePref("notify_digest")}
-            />
+            {TOGGLES.map((t) => (
+              <Toggle
+                key={t.key}
+                label={t.label}
+                hint={t.hint}
+                checked={prefs[t.key]}
+                disabled={busy}
+                onChange={() => togglePref(t.key)}
+              />
+            ))}
             <div className="flex flex-wrap gap-3">
               <button onClick={sendTest} disabled={busy} className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-bg disabled:opacity-60">
                 Send test notification

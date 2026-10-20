@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { ArticleCard, ArticleRowItem, EmptyState } from "@/components/article-card";
 import { getCategoryArticles } from "@/lib/articles";
 import { CATEGORIES, getCategory } from "@/lib/categories";
@@ -13,7 +14,32 @@ export async function generateMetadata({ params }: PageProps<"/category/[slug]">
   return { title: category?.name ?? "Not found" };
 }
 
-export default async function CategoryPage({ params }: PageProps<"/category/[slug]">) {
+// Params are read inside Suspense so navigating between sections shows the skeleton instantly.
+export default function CategoryPage({ params }: PageProps<"/category/[slug]">) {
+  return (
+    <Suspense fallback={<CategorySkeleton />}>
+      <CategoryContent params={params} />
+    </Suspense>
+  );
+}
+
+function CategorySkeleton() {
+  return (
+    <div className="flex animate-pulse flex-col gap-8" aria-hidden>
+      <div className="border-b-2 border-ink pb-3">
+        <div className="h-10 w-48 rounded bg-surface-2" />
+        <div className="mt-2 h-4 w-72 max-w-full rounded bg-surface-2" />
+      </div>
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="aspect-[16/10] rounded-lg bg-surface-2" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+async function CategoryContent({ params }: Pick<PageProps<"/category/[slug]">, "params">) {
   const category = getCategory((await params).slug);
   if (!category) notFound();
 
